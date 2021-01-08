@@ -1,0 +1,50 @@
+/* Load custom font */
+@font-face {
+    font-family: "SF Pro Display Regular";
+    src: url("../fonts/SF-Pro-Display-Regular.ttf");
+}
+
+@font-face {
+     font-family: "SF Pro Display Medium";
+     src: url("../fonts/SF-Pro-Display-Medium.ttf");
+}
+
+@font-face {
+     font-family: "SF Pro Display Semibold";
+     src: url("../fonts/SF-Pro-Display-Semibold.ttf");
+}
+
+@font-face {
+     font-family: "SF Pro Display Bold";
+     src: url("../fonts/SF-Pro-Display-Bold.ttf");
+}
+
+/* General styles */
+.container {
+    -fx-border-radius: 2;
+    -fx-background-radius: 2;
+    -fx-border-width: 2;
+    -fx-border-color: #F1F2F2;
+}
+
+.label, .hyperlink {
+    -fx-font-family: "SF Pro Display Regular";
+    -fx-font-size: 13px;
+    -fx-text-fill: #575B5C;
+}
+
+.hyperlink:hover {
+    -fx-underline: true;
+}
+
+.hyperlink:visited {
+   -fx-underline: false;
+}
+
+.list {
+    -fx-background-color: transparent;
+}
+
+.list > .viewport {
+    -fx-background-color: transparent;
+}
