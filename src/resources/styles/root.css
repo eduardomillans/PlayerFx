@@ -21,8 +21,8 @@
 
 /* General styles */
 .container {
-    -fx-border-radius: 2;
-    -fx-background-radius: 2;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
     -fx-border-width: 2;
     -fx-border-color: #F1F2F2;
 }
@@ -31,14 +31,17 @@
     -fx-font-family: "SF Pro Display Regular";
     -fx-font-size: 13px;
     -fx-text-fill: #575B5C;
+    -fx-padding: 0;
+    -fx-margin: 0;
 }
 
 .hyperlink:hover {
-    -fx-underline: true;
+    -fx-underline: true !important;
 }
 
 .hyperlink:visited {
-   -fx-underline: false;
+    -fx-border-color: transparent;
+    -fx-underline: false;
 }
 
 .list {

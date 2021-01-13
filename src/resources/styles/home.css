@@ -18,16 +18,8 @@
     -fx-font-family: "SF Pro Display Semibold";
 }
 
-.rounded-button:hover > * {
-    -fx-fill: #BCBEC0;
-}
-
 .rounded-button-blue:hover > * {
     -fx-fill: #0351C1;
-}
-
-.item:hover {
-    -fx-background-color: #F1F2F2;
 }
 
 .title {
@@ -44,4 +36,8 @@
     -fx-font-family: "SF Pro Display Semibold";
     -fx-font-size: 13px;
     -fx-text-fill: #9EA09F;
+}
+
+.playing {
+    -fx-text-fill: #527ADA;
 }
