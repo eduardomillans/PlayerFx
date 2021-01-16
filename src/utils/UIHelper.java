@@ -12,11 +12,10 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class UIHelper {
 
-    public static HashMap<Identifier, Node> buildSongItemView(
+    public static GridPane buildSongItemView(
             SimpleStringProperty titleProperty,
             SimpleStringProperty artistProperty,
             SimpleStringProperty durationProperty
@@ -50,11 +49,7 @@ public class UIHelper {
         gridPane.addColumn(1, durationLabel);
         gridPane.getColumnConstraints().addAll(firstColumnConstrains, secondColumnConstrains);
 
-        HashMap<Identifier, Node> hashMap = new HashMap<>();
-        hashMap.put(Identifier.SONG_ITEM_GRIDPANE, gridPane);
-        hashMap.put(Identifier.SONG_ITEM_HYPERLINK, titleHyperlink);
-
-        return hashMap;
+        return gridPane;
     }
 
     public static ArrayList<Hyperlink> getSongItemHyperlinkList(VBox parent) {
@@ -76,7 +71,7 @@ public class UIHelper {
         return songItemHyperlinkList;
     }
 
-    public static void toggleSongItemColor(VBox parent, Hyperlink currentSongItemHyperlink) {
+    public static void toggleSongTitleColor(VBox parent, Hyperlink currentSongItemHyperlink) {
         for (Hyperlink songItemHyperlink : UIHelper.getSongItemHyperlinkList(parent)) {
             if (songItemHyperlink.getStyleClass().contains("song")) {
                 // Reset the class "playing"

@@ -6,4 +6,6 @@ public interface SongListener {
 
     void current(Song song);
 
+    void finished();
+
 }

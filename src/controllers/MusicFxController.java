@@ -4,155 +4,233 @@ import controllers.interfaces.ProgressListener;
 import controllers.interfaces.SongListener;
 import javafx.scene.media.MediaPlayer;
 import models.Song;
-import utils.Identifier;
-import utils.MediaPlayerFx;
+import utils.SongState;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class MusicFxController {
 
-    private final ArrayList<MediaPlayerFx> mediaPlayerFxList;
-    private MediaPlayerFx currentMediaPlayerFx;
-    private double currentVolume;
+    private final ArrayList<Song> songList;
+    private final ArrayList<Song> shufflingSongList;
+    private final ArrayList<Song> recentSongList;
+    private Song currentSong;
+    private MediaPlayer mediaPlayer;
+    private boolean isRandomActivate;
 
     public MusicFxController(File[] songFiles, SongListener songListener) {
         // Initialize variables
-        mediaPlayerFxList = new ArrayList<>();
-        currentMediaPlayerFx = null;
-        currentVolume = 0.25;
+        songList = new ArrayList<>();
+        shufflingSongList = new ArrayList<>();
+        recentSongList = new ArrayList<>();
+        currentSong = null;
+        mediaPlayer = null;
+        isRandomActivate = false;
 
-        // Loop the song files
+        // Cycle through song files
         for (File songFile : songFiles) {
-            // Create a MediaPlayerFx and add it to the array
-            MediaPlayerFx mediaPlayerFx = new MediaPlayerFx(songFile);
-            mediaPlayerFx.setVolume(currentVolume);
-            mediaPlayerFxList.add(mediaPlayerFx);
-
-            // Get the song model
-            Song song = mediaPlayerFx.getSong();
+            // Create a song model and add it to the array
+            Song song = new Song(songFile);
+            songList.add(song);
 
             // Send song to listener
             songListener.current(song);
         }
     }
 
-    public double getVolume() {
-        return currentVolume;
-    }
-
+    // Update volume
     public void setVolume(double volume) {
-        currentVolume = volume;
-        currentMediaPlayerFx.setVolume(volume);
+        if (hasCurrentSong()) {
+            mediaPlayer.setVolume(volume);
+        }
     }
 
-    public boolean hasCurrentMediaPlayerFx() {
-        return currentMediaPlayerFx != null;
+    // "Flag" to validate random state
+    public boolean isRandomActivate() {
+        return isRandomActivate;
+    }
+
+    public void setRandomActivate(boolean randomActivate) {
+        isRandomActivate = randomActivate;
+        if (isRandomActivate) {
+            shuffle();
+        }
+    }
+
+    public ArrayList<Song> getRecentSongList() {
+        return recentSongList;
+    }
+
+    // Sort randomly
+    private void shuffle() {
+        Random rand = new Random();
+
+        // Reshuffle the list
+        if (hasCurrentSong()) {
+            // First, clear the shuffle list
+            shufflingSongList.clear();
+            // After, add the current song into first position of shuffle list
+            int indexOfCurrentSong = songList.indexOf(currentSong);
+            shufflingSongList.add(songList.get(indexOfCurrentSong));
+        }
+
+        // Finish to fill the list
+        while (shufflingSongList.size() != songList.size()) {
+            int randomIndexToSwap = rand.nextInt(songList.size());
+            if (!shufflingSongList.contains(songList.get(randomIndexToSwap))) {
+                shufflingSongList.add(songList.get(randomIndexToSwap));
+            }
+        }
+    }
+
+    public boolean hasCurrentSong() {
+        return currentSong != null;
     }
 
     public boolean isSongPlaying() {
-        return currentMediaPlayerFx.getStatus() == MediaPlayer.Status.PLAYING;
+        return mediaPlayer.getStatus() == MediaPlayer.Status.PLAYING;
     }
 
-    public void setSongAction(Identifier identifier) {
-        if (currentMediaPlayerFx != null) {
-            switch (identifier) {
+    // Return the first song id in the respective list
+    public int getFirstSongId() {
+        return isRandomActivate ? shufflingSongList.get(0).getId() : songList.get(0).getId();
+    }
+
+    // Reuse code
+    public void setSongAction(SongState songState) {
+        if (hasCurrentSong()) {
+            switch (songState) {
                 case PLAY_SONG:
-                    currentMediaPlayerFx.play();
+                    mediaPlayer.play();
                     break;
 
                 case PAUSE_SONG:
-                    currentMediaPlayerFx.pause();
+                    mediaPlayer.pause();
                     break;
 
                 case STOP_SONG:
-                    currentMediaPlayerFx.stop();
+                    mediaPlayer.stop();
                     break;
             }
         }
     }
 
-    public int getIndexOfCurrentMPFX(int mediaPlayerFxId) {
-        int indexOfCurrentMPFX = -1;
+    public int getIndexOfCurrentSong(int songId) {
+        int indexOfCurrentSong = -1;
 
-        for (MediaPlayerFx mediaPlayerFx : mediaPlayerFxList) {
-            if (mediaPlayerFx.getId() == mediaPlayerFxId) {
-                indexOfCurrentMPFX = mediaPlayerFxList.indexOf(mediaPlayerFx);
+        for (Song song : songList) {
+            if (song.getId() == songId) {
+                indexOfCurrentSong = songList.indexOf(song);
             }
         }
 
-        return indexOfCurrentMPFX;
+        return indexOfCurrentSong;
     }
 
-    // Set the an id to MediaPlayerFx
-    public void setMediaPlayerFxId(int id, int index) {
-        mediaPlayerFxList.get(index).setId(id);
+    private void addSongToRecentList() {
+        // Just update the position
+        recentSongList.remove(currentSong);
+        recentSongList.add(currentSong);
     }
 
-    // Get the MediaPlayerFx to set current
-    public void selectCurrentSong(int mediaPlayerFxId, SongListener songListener) {
-        // Stop current MediaPlayingFx
-        setSongAction(Identifier.STOP_SONG);
+    // Set id to song model
+    public void setSongId(int id, int index) {
+        songList.get(index).setId(id);
+    }
 
-        // Find the MediaPlayerFx to play
-        for (MediaPlayerFx mediaPlayerFxItem : mediaPlayerFxList) {
-            if (mediaPlayerFxItem.getId() == mediaPlayerFxId) {
-                currentMediaPlayerFx = mediaPlayerFxItem;
+    // Sends the song through the listener
+    public void selectCurrentSong(int songId, SongListener songListener) {
+        // Stop current song
+        setSongAction(SongState.STOP_SONG);
+
+        // Find the song to play
+        for (Song songItem : songList) {
+            if (songItem.getId() == songId) {
+                currentSong = songItem;
             }
         }
 
-        // Update volume
-        currentMediaPlayerFx.setVolume(currentVolume);
+        // Initialize the media player
+        mediaPlayer = new MediaPlayer(currentSong.getMedia());
 
-        // Play the current MediaPlayerFx
-        setSongAction(Identifier.PLAY_SONG);
+        // Play the current song
+        setSongAction(SongState.PLAY_SONG);
+
+        // Add current song to recent list
+        addSongToRecentList();
 
         // Send song to listener
-        songListener.current(currentMediaPlayerFx.getSong());
+        songListener.current(currentSong);
     }
 
     // Listen the buffer progress
     public void setOnCurrentTime(ProgressListener progressListener) {
-        if (hasCurrentMediaPlayerFx()) {
+        if (hasCurrentSong()) {
             // Get the total duration
-            double totalDurationInMillis = currentMediaPlayerFx.getTotalDuration().toMillis();
+            double totalDurationInMillis = currentSong.getMedia().getDuration().toMillis();
 
-            // Listen the current property
-            currentMediaPlayerFx.currentTimeProperty().addListener((observableValue, oldValue, newValue) -> {
+            // Listen the current time property
+            mediaPlayer.currentTimeProperty().addListener((observableValue, oldValue, newValue) -> {
                 // Get current duration
                 double currentDurationInMillis = newValue.toMillis();
 
-                // Send the total and current duration to listener
+                // Sends the total and current duration to the listener
                 progressListener.changed(totalDurationInMillis, currentDurationInMillis);
             });
         }
     }
 
-    // Set next or previous song
-    public int nextOrPreviousMediaPlayerFx(Identifier identifier) {
-        int currentMediaPlayerFxId = -1;
+    // Listen the end of song
+    public void setOnEndMedia(SongListener songListener) {
+        if (hasCurrentSong()) {
+            mediaPlayer.setOnEndOfMedia(songListener::finished);
+        }
+    }
 
-        if (hasCurrentMediaPlayerFx()) {
+    // Change the current song
+    public int nextOrPreviousSong(SongState songState) {
+        int currentSongId = -1;
+
+        if (hasCurrentSong()) {
             // First stop the current song
-            setSongAction(Identifier.STOP_SONG);
+            setSongAction(SongState.STOP_SONG);
 
-            // Get the next or previous song
-            int lastIndexOfMPFX = mediaPlayerFxList.size() - 1;
-            int indexOfCurrentMPFX = mediaPlayerFxList.indexOf(currentMediaPlayerFx);
+            // Remove media from media player
+            mediaPlayer.dispose();
 
-            switch (identifier) {
+            // Select the song list to choose
+            ArrayList<Song> songListToChoose;
+
+            if (isRandomActivate) {
+                songListToChoose = shufflingSongList;
+            } else {
+                songListToChoose = songList;
+            }
+
+            // Get the previous or next song
+            int lastIndexOfSongList = songListToChoose.size() - 1;
+            int indexOfCurrentSong = songListToChoose.indexOf(currentSong);
+
+            switch (songState) {
                 case NEXT_SONG:
-                    currentMediaPlayerFx = indexOfCurrentMPFX != lastIndexOfMPFX ? mediaPlayerFxList.get(indexOfCurrentMPFX + 1) : mediaPlayerFxList.get(0);
-                    currentMediaPlayerFxId = currentMediaPlayerFx.getId();
+                    currentSong = indexOfCurrentSong != lastIndexOfSongList ? songListToChoose.get(indexOfCurrentSong + 1) : songListToChoose.get(0);
+                    currentSongId = currentSong.getId();
                     break;
 
                 case PREVIOUS_SONG:
-                    currentMediaPlayerFx = indexOfCurrentMPFX != 0 ? mediaPlayerFxList.get(indexOfCurrentMPFX - 1) : mediaPlayerFxList.get(lastIndexOfMPFX);
-                    currentMediaPlayerFxId = currentMediaPlayerFx.getId();
+                    currentSong = indexOfCurrentSong != 0 ? songListToChoose.get(indexOfCurrentSong - 1) : songListToChoose.get(lastIndexOfSongList);
+                    currentSongId = currentSong.getId();
                     break;
             }
         }
 
-        return currentMediaPlayerFxId;
+        return currentSongId;
+    }
+
+    // Reset media player
+    public void dispose() {
+        setSongAction(SongState.STOP_SONG);
+        mediaPlayer.dispose();
     }
 }

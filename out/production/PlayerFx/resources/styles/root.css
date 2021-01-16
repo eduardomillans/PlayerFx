@@ -40,7 +40,7 @@
 }
 
 .hyperlink:visited {
-    -fx-border-color: transparent;
+    -fx-border-color: transparent !important;
     -fx-underline: false;
 }
 
